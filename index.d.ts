@@ -1,6 +1,9 @@
 declare module "bun" {
 	interface Env {
-		APP_KEY: string;
-		APP_SECRET: string;
+		ACCESS_KEY_ID: string;
+		ACCESS_KEY_SECRED: string;
+		APP_ID: string;
+		API_ACCESS_TOKEN: string;
+		PORT: string;
 	}
 }

@@ -1,5 +1,5 @@
 import type { NextFunction, Request, Response } from "@tinyhttp/app";
-import axios, { type AxiosInstance, type AxiosRequestHeaders } from "axios";
+import axios, { type AxiosInstance } from "axios";
 import { getEncodeHeader } from "./utils";
 
 type FixedData = {
@@ -35,18 +35,14 @@ export function createProxy(instance: AxiosInstance) {
 	};
 }
 
-export const bliveRequest = axios.create({
-	baseURL: "https://api.live.bilibili.com",
-});
-
 export const bliOpenRequest = axios.create({
 	baseURL: "https://live-open.biliapi.com",
 });
 
 bliOpenRequest.interceptors.request.use((config) => {
 	const headers = getEncodeHeader(
-		process.env.APP_KEY,
-		process.env.APP_SECRET,
+		process.env.ACCESS_KEY_ID,
+		process.env.ACCESS_KEY_SECRED,
 		config.data,
 	);
 
@@ -55,5 +51,4 @@ bliOpenRequest.interceptors.request.use((config) => {
 	return config;
 });
 
-export const bliveApiProxy = createProxy(bliveRequest);
 export const bliOpenApiProxy = createProxy(bliOpenRequest);

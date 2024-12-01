@@ -3,7 +3,8 @@
 	"module": "index.ts",
 	"type": "module",
 	"scripts": {
-		"start": "bun --watch src/index.ts",
+		"dev": "bun --watch --inspect src/index.ts",
+		"start": "bun src/index.ts",
 		"lint": "bunx biome check --write ."
 	},
 	"devDependencies": {
@@ -17,6 +18,7 @@
 		"@tinyhttp/app": "^2.4.0",
 		"@tinyhttp/cors": "^2.0.1",
 		"@tinyhttp/logger": "^2.0.0",
-		"axios": "^1.7.8"
+		"axios": "^1.7.8",
+		"milliparsec": "^5.0.1"
 	}
 }
