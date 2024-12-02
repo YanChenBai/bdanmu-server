@@ -3,13 +3,15 @@
 	"module": "index.ts",
 	"type": "module",
 	"scripts": {
-		"dev": "bun --watch --inspect src/index.ts",
-		"start": "bun src/index.ts",
+		"dev": "bun --watch src/index.ts",
+		"prod:start": "bunx pm2 start ecosystem.config.cjs",
+		"prod:stop": "bunx pm2 stop ecosystem.config.cjs",
 		"lint": "bunx biome check --write ."
 	},
 	"devDependencies": {
 		"@biomejs/biome": "1.9.4",
-		"@types/bun": "latest"
+		"@types/bun": "latest",
+		"dotenv": "^16.4.5"
 	},
 	"peerDependencies": {
 		"typescript": "^5.0.0"
@@ -19,6 +21,7 @@
 		"@tinyhttp/cors": "^2.0.1",
 		"@tinyhttp/logger": "^2.0.0",
 		"axios": "^1.7.8",
-		"milliparsec": "^5.0.1"
+		"milliparsec": "^5.0.1",
+		"pm2": "^5.4.3"
 	}
 }

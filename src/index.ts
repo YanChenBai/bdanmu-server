@@ -8,13 +8,12 @@ const app = new App();
 app.use(json());
 app.use(logger()).use(
 	cors({
-		// origin: "http://localhost:5173",
 		methods: ["GET", "POST"],
 		allowedHeaders: ["Content-Type", "Authorization"], // 允许的头部
 	}),
 );
 
-app.use("*", (req, res, next) => {
+app.use("/v2/app", (req, res, next) => {
 	if (
 		req.method !== "OPTIONS" &&
 		req.path.startsWith("/v2/app/") &&
