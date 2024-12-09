@@ -1,4 +1,6 @@
 import crypto from "node:crypto";
+import type { NextFunction, Request, Response } from "@tinyhttp/app";
+import type { AxiosInstance } from "axios";
 
 /**
  * 鉴权加密
@@ -44,4 +46,37 @@ export function getEncodeHeader(
  */
 export function getMd5Content(str: string) {
 	return crypto.createHash("md5").update(str).digest("hex");
+}
+
+type FixedData = {
+	query?: Record<string, any>;
+	body?: Record<string, any>;
+};
+
+const SERVER_ERROR = {
+	code: 50000,
+	msg: "请求失败",
+	message: "请求失败",
+	data: null,
+};
+
+export function createProxy(instance: AxiosInstance) {
+	return (
+		req: Request,
+		res: Response,
+		_next?: NextFunction,
+		fixedData?: FixedData,
+	) => {
+		const query = Object.assign(fixedData?.query ?? {}, req.query ?? {});
+		const body = Object.assign(fixedData?.body ?? {}, req.body ?? {});
+
+		instance({
+			url: req.path,
+			method: req.method,
+			params: query,
+			data: body,
+		})
+			.then((resp) => res.json(resp.data))
+			.catch(() => res.status(500).json(SERVER_ERROR));
+	};
 }

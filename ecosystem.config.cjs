@@ -6,7 +6,7 @@ require("dotenv").config();
 const apps = [
 	{
 		name: "BdanmuServer",
-		script: "src/index.ts",
+		script: "src/server.ts",
 		interpreter: "bun",
 		env: process.env,
 	},

@@ -1,46 +1,78 @@
 import { App } from "@tinyhttp/app";
 import { cors } from "@tinyhttp/cors";
 import { logger } from "@tinyhttp/logger";
+import axios from "axios";
 import { json } from "milliparsec";
-import { bliOpenApiProxy } from "./requests";
+import { createProxy, getEncodeHeader } from "./utils";
 
-const app = new App();
-app.use(json());
-app.use(logger()).use(
-	cors({
-		methods: ["GET", "POST"],
-		allowedHeaders: ["Content-Type", "Authorization"], // 允许的头部
-	}),
-);
+export interface ServerOptions {
+	accessKeyID: string;
+	accessKeySecret: string;
+	appID: string;
+	apiAccessToken: string;
+}
 
-app.use("/v2/app", (req, res, next) => {
-	if (
-		req.method !== "OPTIONS" &&
-		req.path.startsWith("/v2/app/") &&
-		req.headers.authorization !== process.env.API_ACCESS_TOKEN
-	) {
-		return void res.status(401).end();
-	}
+export function createServer(options: ServerOptions) {
+	const app = new App();
 
-	next?.();
-});
+	const bliOpenRequest = axios.create({
+		baseURL: "https://live-open.biliapi.com",
+	});
 
-app.get("/", (_, res) => res.send("ok."));
+	bliOpenRequest.interceptors.request.use((config) => {
+		const headers = getEncodeHeader(
+			options.accessKeyID,
+			options.accessKeySecret,
+			config.data,
+		);
 
-const commonParams = {
-	body: {
-		app_id: Number(process.env.APP_ID),
-	},
-};
+		config.headers = Object.assign(config.headers, headers);
 
-["/v2/app/start", "/v2/app/end"].map((path) =>
-	app.post(path, (...args) => bliOpenApiProxy(...args, commonParams)),
-);
+		return config;
+	});
 
-["/v2/app/heartbeat", "/v2/app/batchHeartbeat"].map((path) =>
-	app.post(path, bliOpenApiProxy),
-);
+	const bliOpenApiProxy = createProxy(bliOpenRequest);
 
-const port = Number(process.env.PORT || 3000);
+	app.use(json());
+	app.use(logger());
+	app.use(
+		cors({
+			methods: ["GET", "POST"],
+			allowedHeaders: ["Content-Type", "Authorization"], // 允许的头部
+		}),
+	);
 
-app.listen(port, () => console.log(`Listening on http://localhost:${port}`));
+	app.use("/v2/app", (req, res, next) => {
+		if (
+			req.method !== "OPTIONS" &&
+			req.path.startsWith("/v2/app/") &&
+			req.headers.authorization !== options.apiAccessToken
+		) {
+			return void res.status(401).end();
+		}
+
+		next?.();
+	});
+
+	app.get("/", (_, res) => res.send("ok."));
+
+	const commonParams = {
+		body: {
+			app_id: Number(options.appID),
+		},
+	};
+
+	app.get("/v2/app/health", (_, res) => res.send("ok."));
+
+	const switchRoute = ["/v2/app/start", "/v2/app/end"];
+
+	switchRoute.map((path) =>
+		app.post(path, (...args) => bliOpenApiProxy(...args, commonParams)),
+	);
+
+	const heartbeatRoute = ["/v2/app/heartbeat", "/v2/app/batchHeartbeat"];
+
+	heartbeatRoute.map((path) => app.post(path, bliOpenApiProxy));
+
+	return app;
+}
